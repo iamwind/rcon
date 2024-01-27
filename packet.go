@@ -102,7 +102,7 @@ func (packet *Packet) ReadFrom(r io.Reader) (int64, error) {
 	if packet.Size < MinPacketSize {
 		return n, ErrResponseTooSmall
 	}
-
+	
 	if err := binary.Read(r, binary.LittleEndian, &packet.ID); err != nil {
 		return n, fmt.Errorf("rcon: read packet id: %w", err)
 	}
@@ -124,7 +124,11 @@ func (packet *Packet) ReadFrom(r io.Reader) (int64, error) {
 		var m int
 		var err error
 
-		if m, err = r.Read(packet.body[i:]); err != nil {
+		if i >= 2 && packet.body[i-1] == 0 && packet.body[i-2] == 0 {
+			break
+		}
+
+		if m, err = r.Read(packet.body[i:]); err != nil {			
 			return n + int64(m) + int64(i), fmt.Errorf("rcon: %w", err)
 		}
 
